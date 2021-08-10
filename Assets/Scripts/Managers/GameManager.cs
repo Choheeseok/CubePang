@@ -6,26 +6,25 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance = null;
-
-   // public GameObject cameraManagerPrefab;
-   // public GameObject cubeManagerPrefab;
-   // public GameObject bingoManagerPrefab;
-   // public GameObject uiManagerPrefab;
-    public LayerMask tileLayer;
+    
+    [SerializeField]
+    private UIController uiController;
 
     private Color originTileColor;
 
     public bool PlayerTurnEnd { get; set; }
     public int CubeCount { get; set; }           // 큐브의 규격 : 3X3 => 3,  4X4 => 4  
     public float radius;         // 큐브의 한 블럭의 반지름
-    public int Level { get; set; }
+    public uint Level { get; set; }
     public List<Tile> TileList { get; set; }   // 타일을 관리할 리스트
+
+    public Dictionary<CustomVariables.COLOR,  uint> TileCountDictionary { get; set; } // 타일의 개수를 관리할 리스트
     public List<KeyValuePair<Transform, CustomVariables.TILE>> ItemList { get; set; }
     public bool IsCubeSelected { get; set; }
     public CustomVariables.TURN PlayerTurn { get; set; }
     public int currentTurn { get;set; }
 
-    public int Score { get; set; }
+    public uint Score { get; set; }
 
     public int itemPercentage;
 
@@ -46,6 +45,15 @@ public class GameManager : MonoBehaviour
 
         PlayerTurn = CustomVariables.TURN.PLAYER_TURN;
         TileList = new List<Tile>();
+        TileCountDictionary = new Dictionary<CustomVariables.COLOR, uint>()
+        {
+            {CustomVariables.COLOR.RED, 0},
+            {CustomVariables.COLOR.GREEN, 0},
+            {CustomVariables.COLOR.BLUE, 0},
+            {CustomVariables.COLOR.YELLOW, 0},
+            {CustomVariables.COLOR.CYAN, 0},
+            {CustomVariables.COLOR.MAGENTA, 0},
+        };
         ItemList = new List<KeyValuePair<Transform, CustomVariables.TILE>>();
 
         currentTurn = 0;
@@ -104,8 +112,8 @@ public class GameManager : MonoBehaviour
             Debug.LogError("잘못된 접근입니다.");
         }
         ConfirmBingo();
-        UIManager.instance.UpdateScore();
-        UIManager.instance.UpdateColorCount();
+        uiController.UpdateScore(Score);
+        uiController.UpdateColorCount(TileCountDictionary, Level);
 
     }
 

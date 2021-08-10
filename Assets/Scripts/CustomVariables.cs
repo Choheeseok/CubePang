@@ -1,15 +1,26 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-// 사용자 정의 상수입니다. 변하지 않는 변수는 여기다 집어넣으라구~
-
-public class CustomVariables
+public static class CustomVariables
 {
     public enum TURN { PLAYER_TURN, EVENT_TURN, PREPARE_TURN }
     public enum TILE { EMPTY, COLOR_BOMB, LINE_BOMB, SIDE_BOMB}
     public enum SIDE { PX, NX, PY, NY, PZ, NZ };
-    public enum COLOR { RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA}
+    public enum COLOR  { RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA}
+
+    public static readonly Dictionary<COLOR, Color> Colors = new Dictionary<COLOR, Color>()
+    {
+        {COLOR.RED, Color.red},
+        {COLOR.GREEN, Color.green},
+        {COLOR.BLUE, Color.blue},
+        {COLOR.YELLOW, Color.yellow},
+        {COLOR.CYAN, Color.cyan},
+        {COLOR.MAGENTA, Color.magenta},
+    };
+    
     public readonly static float EPSILON = 0.001f;
 
     public const int LEFT = 0;
@@ -21,7 +32,7 @@ public class CustomVariables
     public const int CAMERA_ZOOMOUT = 30;
     public const int CAMERA_ZOOMDEFAULT = 22;
 
-    public static bool IsSimillerValue(float a, float b)
+    public static bool IsEqual(float a, float b)
     {
         if (a > b + EPSILON)
             return false;
@@ -30,7 +41,7 @@ public class CustomVariables
         return true;
     }
 
-    public static bool IsSimillerVectorDir(Vector3 a, Vector3 b)
+    public static bool IsEqual(Vector3 a, Vector3 b)
     {
         float dotValue = Vector3.Dot(a, b);
         if (dotValue > 1 + EPSILON)
@@ -69,19 +80,14 @@ public static class ListFunction
 
 public static class TileColors
 {
-    public static Color RandomColor(int range)
-    {
-        int r = Random.Range(0, range);
-        switch (r)
-        {
-            case 0: return Color.red;
-            case 1: return Color.blue;
-            case 2: return Color.green;
-            case 3: return Color.yellow;
-            case 4: return Color.cyan;
-            case 5: return Color.magenta;
-            default: return Color.white;    // error color
-        }
-    }
 
+    public static KeyValuePair<CustomVariables.COLOR, Color> RandomColor(uint range)
+    {
+        uint r = (uint)Random.Range(0, range);
+        KeyValuePair<CustomVariables.COLOR, Color> pair = 
+            new KeyValuePair<CustomVariables.COLOR, Color>(
+            (CustomVariables.COLOR) (int) r,
+            CustomVariables.Colors[(CustomVariables.COLOR)(int) r]);
+        return pair;
+    }
 }

@@ -167,7 +167,9 @@ public class CubeManager : MonoBehaviour
 
         foreach (var tile in GameManager.instance.TileList)
         {
-            tile.transform.GetComponent<MeshRenderer>().material.color = TileColors.RandomColor(GameManager.instance.Level);
+            KeyValuePair<CustomVariables.COLOR, Color> pair= TileColors.RandomColor(GameManager.instance.Level);
+            GameManager.instance.TileCountDictionary[CustomVariables.COLOR.RED]++;
+            tile.SetColor(pair);
             tile.type = CustomVariables.TILE.EMPTY;
         }
     }

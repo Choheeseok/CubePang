@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
+    private CustomVariables.COLOR color;
+    private Color materialColor;
+    
     public GameObject child;
     public CustomVariables.TILE type;
 
@@ -25,6 +28,16 @@ public class Tile : MonoBehaviour
         type = type_;
     }
 
+    public void SetColor(KeyValuePair<CustomVariables.COLOR, Color> pair)
+    {
+        GameManager.instance.TileCountDictionary[color]--;
+        GameManager.instance.TileCountDictionary[pair.Key]++;
+        
+        color = pair.Key;
+        materialColor = pair.Value;
+        transform.GetComponent<MeshRenderer>().material.color = materialColor;
+    }
+    
     public void SaveCurTileColor()
     {
         prevTileColor = transform.GetComponent<MeshRenderer>().material.color;
@@ -36,8 +49,14 @@ public class Tile : MonoBehaviour
     }
 
     public void TakeDamage()
-    { 
-        transform.GetComponent<MeshRenderer>().material.color = TileColors.RandomColor(GameManager.instance.Level);
+    {
+        KeyValuePair<CustomVariables.COLOR, Color> pair = TileColors.RandomColor(GameManager.instance.Level);
+        GameManager.instance.TileCountDictionary[color]--;
+        GameManager.instance.TileCountDictionary[pair.Key]++;
+        color = pair.Key;
+        materialColor = pair.Value;
+        transform.GetComponent<MeshRenderer>().material.color = materialColor;
+        
         playParticle.GetComponent<ParticleSystem>().Play();
         ++GameManager.instance.Score;
 
@@ -47,6 +66,6 @@ public class Tile : MonoBehaviour
 
     public bool IsSameColor(Color color)
     {
-       return  transform.GetComponent<MeshRenderer>().material.color == color;
+       return  materialColor == color;
     }
 }

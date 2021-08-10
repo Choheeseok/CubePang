@@ -160,7 +160,7 @@ public class BingoManager : MonoBehaviour
         for (int i = 0; i < cubeCount * cubeCount * 6; ++i)
         {
            // tileList[i].SaveCurTileColor();
-            if (CustomVariables.IsSimillerVectorDir(upVector, tileList[i].transform.up))
+            if (CustomVariables.IsEqual(upVector, tileList[i].transform.up))
                 sameSideTiles.Add(tileList[i]);
         }
         // - 같은 줄에 있다 -> Up Vectr를 제외한 평면에서 한 좌표가 같다
@@ -172,23 +172,23 @@ public class BingoManager : MonoBehaviour
                 
                 if (0.5f< upVector.x ||  upVector.x < -0.5f)
                 {
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.y))   // 가로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.y))   // 가로
                         sameLineTiles[idx].Add(sameSideTiles[j]);
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.z))   // 세로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.z))   // 세로
                         sameLineTiles[3 + idx].Add(sameSideTiles[j]);
                 }
                 if (0.5f < upVector.y || upVector.y < -0.5f)
                 {
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.x))   // 가로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.x))   // 가로
                         sameLineTiles[idx].Add(sameSideTiles[j]);
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.z))   // 세로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.z))   // 세로
                         sameLineTiles[3 + idx].Add(sameSideTiles[j]);
                 }
                 if (0.5f < upVector.z || upVector.z < -0.5f)
                 {
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.y))   // 가로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.y))   // 가로
                         sameLineTiles[idx].Add(sameSideTiles[j]);
-                    if (CustomVariables.IsSimillerValue(radius * i, sameSideTiles[j].transform.position.x))   // 세로
+                    if (CustomVariables.IsEqual(radius * i, sameSideTiles[j].transform.position.x))   // 세로
                         sameLineTiles[3 + idx].Add(sameSideTiles[j]);
                 }
 
@@ -302,14 +302,14 @@ public class BingoManager : MonoBehaviour
             {
                 if (0 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.y, target.transform.position.y))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.y, target.transform.position.y))
                         bingoTiles.Add(tile);
                 }
                 else if (1 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.z, target.transform.position.z))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.z, target.transform.position.z))
                         bingoTiles.Add(tile);
                 }
             }
@@ -320,14 +320,14 @@ public class BingoManager : MonoBehaviour
             {
                 if (0 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.x, target.transform.position.x))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.x, target.transform.position.x))
                         bingoTiles.Add(tile);
                 }
                 else if (1 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.z, target.transform.position.z))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.z, target.transform.position.z))
                         bingoTiles.Add(tile);
                 }
             }
@@ -338,14 +338,14 @@ public class BingoManager : MonoBehaviour
             {
                 if (0 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.y, target.transform.position.y))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.y, target.transform.position.y))
                         bingoTiles.Add(tile);
                 }
                 else if (1 == dir)
                 {
-                    if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up) &&
-                        CustomVariables.IsSimillerValue(tile.transform.position.x, target.transform.position.x))
+                    if (CustomVariables.IsEqual(upVector, tile.transform.up) &&
+                        CustomVariables.IsEqual(tile.transform.position.x, target.transform.position.x))
                         bingoTiles.Add(tile);
                 }
             }
@@ -370,7 +370,7 @@ public class BingoManager : MonoBehaviour
         Vector3 upVector = target.transform.up;
         foreach(Tile tile in tileList)
         {
-            if (CustomVariables.IsSimillerVectorDir(upVector, tile.transform.up))
+            if (CustomVariables.IsEqual(upVector, tile.transform.up))
                 bingoTiles.Add(tile);
         }
 
