@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance = null;
-    
+    public AudioSource backgroundMusicSource; // 배경 음악용 오디오 소스
     [SerializeField]
     private UIController uiController;
 
@@ -61,6 +61,11 @@ public class GameManager : MonoBehaviour
         PlayerTurnEnd = false;
 
         IsDoingBingo = false;
+    }
+
+    private void Start()
+    {
+        backgroundMusicSource.Play();
     }
 
     void Update()

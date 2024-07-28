@@ -5,6 +5,7 @@ using UnityEngine;
 public class BingoManager : MonoBehaviour
 {
     public static BingoManager instance = null;  // 싱글톤 인스턴스
+    public List<AudioSource> explosionSources;
 
     public GameObject itemSpawnerPrefab;
 
@@ -223,6 +224,9 @@ public class BingoManager : MonoBehaviour
 
         for (int i = 0; i < bingoTiles.Count; ++i)
         {
+            int idx = Random.Range(0, 2);
+            var source = explosionSources[idx];
+            source.Play();
             bingoTiles[i].TakeDamage();
         }
 
