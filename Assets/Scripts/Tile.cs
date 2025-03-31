@@ -6,66 +6,81 @@ public class Tile : MonoBehaviour
 {
     private CustomVariables.COLOR color;
     private Color materialColor;
+    private Color prevTileColor;
     
     public GameObject child;
     public CustomVariables.TILE type;
+    public GameObject particlePrefab;
+    private GameObject particleInstance;
 
-    Color prevTileColor;
-
-    public GameObject particle;
-    public GameObject playParticle;
-
-    void Awake()
+    private void Awake()
     {
-        playParticle = Instantiate(particle, transform);
+        particleInstance = Instantiate(particlePrefab, transform);
         child = null;
         type = CustomVariables.TILE.EMPTY;
     }
 
-    public void SetChild(GameObject child_, CustomVariables.TILE type_)
+    public void SetChild(GameObject childObject, CustomVariables.TILE tileType)
     {
-        child = child_;
-        type = type_;
+        child = childObject;
+        type = tileType;
     }
 
-    public void SetColor(KeyValuePair<CustomVariables.COLOR, Color> pair)
+    public void SetColor(KeyValuePair<CustomVariables.COLOR, Color> colorPair)
     {
-        GameManager.instance.TileCountDictionary[color]--;
-        GameManager.instance.TileCountDictionary[pair.Key]++;
+        UpdateTileCount(color, colorPair.Key);
         
-        color = pair.Key;
-        materialColor = pair.Value;
-        transform.GetComponent<MeshRenderer>().material.color = materialColor;
+        color = colorPair.Key;
+        materialColor = colorPair.Value;
+        UpdateMaterialColor();
     }
     
-    public void SaveCurTileColor()
+    public void SaveCurrentColor()
     {
-        prevTileColor = transform.GetComponent<MeshRenderer>().material.color;
+        prevTileColor = GetComponent<MeshRenderer>().material.color;
     }
 
-    public void LoadPrevTileColor()
+    public void RestorePreviousColor()
     {
-        transform.GetComponent<MeshRenderer>().material.color = prevTileColor;
+        GetComponent<MeshRenderer>().material.color = prevTileColor;
     }
 
     public void TakeDamage()
     {
-        KeyValuePair<CustomVariables.COLOR, Color> pair = TileColors.RandomColor(GameManager.instance.Level);
-        GameManager.instance.TileCountDictionary[color]--;
-        GameManager.instance.TileCountDictionary[pair.Key]++;
-        color = pair.Key;
-        materialColor = pair.Value;
-        transform.GetComponent<MeshRenderer>().material.color = materialColor;
+        var newColor = TileColors.RandomColor(GameManager.instance.Level);
+        UpdateTileCount(color, newColor.Key);
         
-        playParticle.GetComponent<ParticleSystem>().Play();
-        ++GameManager.instance.Score;
+        color = newColor.Key;
+        materialColor = newColor.Value;
+        UpdateMaterialColor();
+        
+        PlayParticleEffect();
+        GameManager.instance.Score++;
 
         if (child != null)
+        {
             ItemManager.instance.Activate(transform, type);
+        }
     }
 
-    public bool IsSameColor(Color color)
+    public bool IsSameColor(Color otherColor)
     {
-       return  materialColor == color;
+        return materialColor == otherColor;
+    }
+
+    private void UpdateTileCount(CustomVariables.COLOR oldColor, CustomVariables.COLOR newColor)
+    {
+        GameManager.instance.TileCountDictionary[oldColor]--;
+        GameManager.instance.TileCountDictionary[newColor]++;
+    }
+
+    private void UpdateMaterialColor()
+    {
+        GetComponent<MeshRenderer>().material.color = materialColor;
+    }
+
+    private void PlayParticleEffect()
+    {
+        particleInstance.GetComponent<ParticleSystem>().Play();
     }
 }

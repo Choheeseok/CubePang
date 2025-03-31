@@ -1,14 +1,25 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Item : MonoBehaviour
 {
-    float delta = 0.0025f;
+    private const float ROTATION_SPEED = 30.0f;
+    private const float FLOAT_AMPLITUDE = 0.0025f;
+    private const float FLOAT_FREQUENCY = 1.0f;
 
-    void Update()
+    private void Update()
     {
-        transform.Rotate(new Vector3(0, 30.0f*Time.deltaTime, 0), Space.Self);
-        transform.Translate(0, delta * Mathf.Sin(Time.time), 0, Space.Self);
+        RotateItem();
+        FloatItem();
+    }
+
+    private void RotateItem()
+    {
+        transform.Rotate(new Vector3(0, ROTATION_SPEED * Time.deltaTime, 0), Space.Self);
+    }
+
+    private void FloatItem()
+    {
+        float verticalOffset = FLOAT_AMPLITUDE * Mathf.Sin(Time.time * FLOAT_FREQUENCY);
+        transform.Translate(0, verticalOffset, 0, Space.Self);
     }
 }

@@ -1,106 +1,144 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿using UnityEngine;
+using System.Collections;
 
 public class CameraManager : MonoBehaviour
 {
-    public static CameraManager instance = null;
+    private const float ROTATION_SPEED = 0.15f;
+    private const float MOVEMENT_SPEED = 10f;
+    private const float SMOOTH_MOVE_SPEED = 2f;
+    private const float MAX_MOUSE_MOVEMENT = 200000f;
+    private const float INITIAL_Y_ROTATION = 45f;
+    private const float INITIAL_X_ROTATION = -45f;
+    private const float ROTATION_STEP = 90f;
+
+    public static CameraManager instance { get; private set; }
 
     private GameObject endSpot;
     private bool isCameraSelect;
     private Vector3 oldPos;
+    private Transform cameraTransform;
 
     public bool rotateActive { get; set; }
 
     private void Awake()
     {
-        if (instance == null)
-            instance = this;
-        else if (instance != this)
-            Destroy(gameObject);
-
-        rotateActive = true;
+        InitializeSingleton();
     }
 
-    void Start()
+    private void Start()
     {
+        cameraTransform = transform.GetChild(0);
         CameraInit();
+    }
+
+    private void InitializeSingleton()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+
+        rotateActive = true;
     }
 
     public void CameraReset()
     {
         endSpot = new GameObject();
+        Quaternion bestRotation = FindBestRotation();
+        endSpot.transform.rotation = bestRotation;
+        StartCoroutine(SmoothCameraMove(endSpot));
+    }
 
+    private Quaternion FindBestRotation()
+    {
         float minAngle = float.MaxValue;
+        Quaternion bestRotation = Quaternion.identity;
 
         for (int i = 0; i < 4; i++)
         {
             Quaternion destRotation = Quaternion.identity;
-            destRotation *= Quaternion.AngleAxis(45 + i * 90, new Vector3(0, 1, 0));
-            destRotation *= Quaternion.AngleAxis(-45, new Vector3(1, 0, 0));
+            destRotation *= Quaternion.AngleAxis(INITIAL_Y_ROTATION + i * ROTATION_STEP, Vector3.up);
+            destRotation *= Quaternion.AngleAxis(INITIAL_X_ROTATION, Vector3.right);
+            
             float angle = Quaternion.Angle(destRotation, transform.rotation);
-
             if (angle < minAngle)
             {
                 minAngle = angle;
-                endSpot.transform.rotation = destRotation;
+                bestRotation = destRotation;
             }
         }
 
-        StartCoroutine(SmoothCameraMove(endSpot));
+        return bestRotation;
     }
 
     public void CameraInit()
     {
         endSpot = new GameObject();
-        endSpot.transform.rotation.SetLookRotation(new Vector3(0, 0, 1));
-        endSpot.transform.Rotate(new Vector3(0, 1, 0), 45);
-        endSpot.transform.Rotate(new Vector3(1, 0, 0), -45);
+        endSpot.transform.rotation.SetLookRotation(Vector3.forward);
+        endSpot.transform.Rotate(Vector3.up, INITIAL_Y_ROTATION);
+        endSpot.transform.Rotate(Vector3.right, INITIAL_X_ROTATION);
         StartCoroutine(SmoothCameraMove(endSpot));
     }
 
     private IEnumerator SmoothCameraMove(GameObject endSpot)
     {
         float t = 0;
-        while (true)
+        Vector3 localPosition = cameraTransform.localPosition;
+
+        while (t <= 1)
         {
-            if (t > 1)
-                break;
-            Vector3 localPosition = transform.GetChild(0).transform.localPosition;
             transform.rotation = Quaternion.Lerp(transform.rotation, endSpot.transform.rotation, t);
-            transform.GetChild(0).transform.localPosition = Vector3.Lerp(localPosition, new Vector3(localPosition.x, localPosition.y, CustomVariables.CAMERA_ZOOMDEFAULT), t);
-            t += 2f * Time.deltaTime;
+            cameraTransform.localPosition = Vector3.Lerp(localPosition, 
+                new Vector3(localPosition.x, localPosition.y, GameConstants.CAMERA_ZOOMDEFAULT), t);
+            
+            t += SMOOTH_MOVE_SPEED * Time.deltaTime;
             yield return new WaitForEndOfFrame();
         }
+
         Destroy(endSpot);
     }
 
     public void ProcessInput()
     {
-        //확대 축소
+        HandleZoomInput();
+        HandleResetInput();
+    }
+
+    private void HandleZoomInput()
+    {
         if (Input.GetKey(KeyCode.W))
         {
-            transform.GetChild(0).position += transform.GetChild(0).forward * Time.deltaTime * 10;
-            if (transform.GetChild(0).localPosition.z < CustomVariables.CAMERA_ZOOMIN)
-                transform.GetChild(0).localPosition = new Vector3(0, 0, CustomVariables.CAMERA_ZOOMIN);
+            cameraTransform.position += cameraTransform.forward * Time.deltaTime * MOVEMENT_SPEED;
+            ClampCameraZoom(true);
         }
         if (Input.GetKey(KeyCode.S))
         {
-            transform.GetChild(0).position -= transform.GetChild(0).forward * Time.deltaTime * 10;
-            if (transform.GetChild(0).localPosition.z > CustomVariables.CAMERA_ZOOMOUT)
-                transform.GetChild(0).localPosition = new Vector3(0, 0, CustomVariables.CAMERA_ZOOMOUT);
+            cameraTransform.position -= cameraTransform.forward * Time.deltaTime * MOVEMENT_SPEED;
+            ClampCameraZoom(false);
         }
+    }
 
-        //리셋
+    private void ClampCameraZoom(bool isZoomingIn)
+    {
+        float targetZ = isZoomingIn ? GameConstants.CAMERA_ZOOMIN : GameConstants.CAMERA_ZOOMOUT;
+        cameraTransform.localPosition = new Vector3(0, 0, targetZ);
+    }
+
+    private void HandleResetInput()
+    {
         if (Input.GetKeyDown(KeyCode.R))
+        {
             CameraReset();
+        }
     }
 
     public void RotateInput()
     {
-        if (false == rotateActive)
-            return;
+        if (!rotateActive) return;
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -108,22 +146,27 @@ public class CameraManager : MonoBehaviour
             isCameraSelect = true;
         }
 
-        if (true == isCameraSelect)
+        if (isCameraSelect)
         {
             if (Input.GetMouseButton(0))
             {
-                if ((oldPos - Input.mousePosition).sqrMagnitude > 200000)    // 부자연스러운 이동시 움직이지 않습니다.
-                    return;
-
-                Vector3 pos = Input.mousePosition - oldPos;
-
-                transform.RotateAround(new Vector3(0, 0, 0), transform.up, pos.x * 0.15f);
-                transform.RotateAround(new Vector3(0, 0, 0), transform.right, pos.y * 0.15f);
-
-                oldPos = Input.mousePosition;
+                HandleCameraRotation();
             }
             else if (Input.GetMouseButtonUp(0))
+            {
                 isCameraSelect = false;
+            }
         }
+    }
+
+    private void HandleCameraRotation()
+    {
+        Vector3 mouseDelta = Input.mousePosition - oldPos;
+        if (mouseDelta.sqrMagnitude > MAX_MOUSE_MOVEMENT) return;
+
+        transform.RotateAround(Vector3.zero, transform.up, mouseDelta.x * ROTATION_SPEED);
+        transform.RotateAround(Vector3.zero, transform.right, mouseDelta.y * ROTATION_SPEED);
+
+        oldPos = Input.mousePosition;
     }
 }

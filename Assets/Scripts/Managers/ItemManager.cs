@@ -4,78 +4,92 @@ using UnityEngine;
 
 public class ItemManager : MonoBehaviour
 {
-    public static ItemManager instance = null;
+    private const float BOMB_SCALE_X = 0.8f;
+    private const float BOMB_SCALE_Y = 100.0f;
+    private const float BOMB_SCALE_Z = 0.8f;
+    private const float BOMB_OFFSET_Y = 0.5f;
+    private const int COLOR_BOMB_CHANCE = 33;
+    private const int LINE_BOMB_CHANCE = 66;
+    private const int MAX_RANDOM_CHANCE = 99;
 
-    public GameObject SameColorBomb;
-    public GameObject SameLineBomb;
-    public GameObject SameSideBomb;
+    public static ItemManager instance { get; private set; }
 
-    void Awake()
+    [SerializeField] private GameObject sameColorBombPrefab;
+    [SerializeField] private GameObject sameLineBombPrefab;
+    [SerializeField] private GameObject sameSideBombPrefab;
+
+    private void Awake()
+    {
+        InitializeSingleton();
+    }
+
+    private void InitializeSingleton()
     {
         if (instance == null)
+        {
             instance = this;
+        }
         else if (instance != this)
+        {
             Destroy(gameObject);
+        }
     }
 
     public void GenerateItem()
     {
-        List<Tile> tileList = GameManager.instance.TileList;
+        var tileList = GameManager.instance.TileList;
+        var emptyTileIndex = FindEmptyTileIndex(tileList);
+        var bombType = DetermineBombType();
+        var bomb = CreateBomb(tileList[emptyTileIndex], bombType);
+        SetupBomb(bomb, tileList[emptyTileIndex]);
+    }
 
-        int n = Random.Range(1,100);
-        int idx;
-
-        while (true)
+    private int FindEmptyTileIndex(List<Tile> tileList)
+    {
+        int index;
+        do
         {
-            idx = Random.Range(0, tileList.Count);
-            if (tileList[idx].child == null)
-                break;
-        }
+            index = Random.Range(0, tileList.Count);
+        } while (tileList[index].child != null);
+        return index;
+    }
 
-        GameObject bomb = null;
-        CustomVariables.TILE type = CustomVariables.TILE.EMPTY;
+    private (GameObject prefab, CustomVariables.TILE type) DetermineBombType()
+    {
+        int randomValue = Random.Range(1, 100);
+        return randomValue switch
+        {
+            <= COLOR_BOMB_CHANCE => (sameColorBombPrefab, CustomVariables.TILE.COLOR_BOMB),
+            <= LINE_BOMB_CHANCE => (sameLineBombPrefab, CustomVariables.TILE.LINE_BOMB),
+            <= MAX_RANDOM_CHANCE => (sameSideBombPrefab, CustomVariables.TILE.SIDE_BOMB),
+            _ => throw new System.Exception("잘못된 랜덤 값입니다.")
+        };
+    }
 
-        if (n <= 33)
-        {
-            bomb = Instantiate(SameColorBomb, tileList[idx].transform);
-            type = CustomVariables.TILE.COLOR_BOMB;
+    private GameObject CreateBomb(Tile targetTile, (GameObject prefab, CustomVariables.TILE type) bombInfo)
+    {
+        var bomb = Instantiate(bombInfo.prefab, targetTile.transform);
+        targetTile.SetChild(bomb, bombInfo.type);
+        return bomb;
+    }
 
-        }
-        else if (n <= 66)
-        {
-            bomb = Instantiate(SameLineBomb, tileList[idx].transform);
-            type = CustomVariables.TILE.LINE_BOMB;
-        }
-        else if (n <= 99)
-        {
-            bomb = Instantiate(SameSideBomb, tileList[idx].transform);
-            type = CustomVariables.TILE.SIDE_BOMB;
-        }
-        bomb.transform.localScale = new Vector3(0.8f, 100.0f, 0.8f);
-        bomb.transform.position += bomb.transform.up * 0.5f;
-        bomb.GetComponent<MeshRenderer>().material.color = tileList[idx].transform.GetComponent<MeshRenderer>().material.color;
-        tileList[idx].SetChild(bomb, type);
+    private void SetupBomb(GameObject bomb, Tile targetTile)
+    {
+        bomb.transform.localScale = new Vector3(BOMB_SCALE_X, BOMB_SCALE_Y, BOMB_SCALE_Z);
+        bomb.transform.position += bomb.transform.up * BOMB_OFFSET_Y;
+        bomb.GetComponent<MeshRenderer>().material.color = targetTile.transform.GetComponent<MeshRenderer>().material.color;
     }
 
     public void Activate(Transform target, CustomVariables.TILE type)
     {
-        Tile tile = GameManager.instance.GetTile(target);
+        var tile = GameManager.instance.GetTile(target);
+        StartCoroutine(BingoManager.instance.BingoEvent(type, tile));
+        CleanupBomb(tile);
+    }
 
-        if (type == CustomVariables.TILE.COLOR_BOMB)
-        {
-            StartCoroutine(BingoManager.instance.BingoEvent(CustomVariables.TILE.COLOR_BOMB, tile));
-        }
-        else if (type == CustomVariables.TILE.LINE_BOMB)
-        {
-            StartCoroutine(BingoManager.instance.BingoEvent(CustomVariables.TILE.LINE_BOMB, tile));
-        }
-        else if (type == CustomVariables.TILE.SIDE_BOMB)
-        {
-            StartCoroutine(BingoManager.instance.BingoEvent(CustomVariables.TILE.SIDE_BOMB, tile));
-        }
-
+    private void CleanupBomb(Tile tile)
+    {
         tile.type = CustomVariables.TILE.EMPTY;
         Destroy(tile.child);
     }
-
 }

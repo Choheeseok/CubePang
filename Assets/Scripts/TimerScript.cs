@@ -1,42 +1,60 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class TimerScript : MonoBehaviour
 {
-    public float timeRemaining = 10; // 10분 (600초)
-    public bool timerIsRunning = false;
-    public Text timeText; // 타이머를 표시할 UI 텍스트
-    public Text endText;
+    private const float GAME_DURATION = 600f; // 10분
+    private const float SCENE_TRANSITION_DELAY = 5f;
+    private const string TITLE_SCENE_NAME = "TitleScene";
+
+    [SerializeField] private Text timeText;
+    [SerializeField] private Text endText;
+
+    private float timeRemaining;
+    private bool isTimerRunning;
 
     private void Start()
     {
-        // 타이머 시작
-        timerIsRunning = true;
+        InitializeTimer();
     }
 
-    void Update()
+    private void Update()
     {
-        if (timerIsRunning)
+        if (!isTimerRunning) return;
+
+        if (timeRemaining > 0)
         {
-            if (timeRemaining > 0)
-            {
-                timeRemaining -= Time.deltaTime;
-                DisplayTime(timeRemaining);
-            }
-            else
-            {
-                endText.gameObject.SetActive(true);
-                timeRemaining = 0;
-                timerIsRunning = false;
-                StartCoroutine(WaitAndLoadScene(5)); // 5초 대기 후 씬 전환
-            }
+            UpdateTimer();
+        }
+        else
+        {
+            HandleTimerEnd();
         }
     }
 
-    void DisplayTime(float timeToDisplay)
+    private void InitializeTimer()
+    {
+        timeRemaining = GAME_DURATION;
+        isTimerRunning = true;
+    }
+
+    private void UpdateTimer()
+    {
+        timeRemaining -= Time.deltaTime;
+        DisplayTime(timeRemaining);
+    }
+
+    private void HandleTimerEnd()
+    {
+        endText.gameObject.SetActive(true);
+        timeRemaining = 0;
+        isTimerRunning = false;
+        StartCoroutine(WaitAndLoadScene(SCENE_TRANSITION_DELAY));
+    }
+
+    private void DisplayTime(float timeToDisplay)
     {
         timeToDisplay += 1;
 
@@ -46,9 +64,9 @@ public class TimerScript : MonoBehaviour
         timeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
-    IEnumerator WaitAndLoadScene(float waitTime)
+    private IEnumerator WaitAndLoadScene(float waitTime)
     {
         yield return new WaitForSeconds(waitTime);
-        SceneManager.LoadScene("TitleScene");
+        SceneManager.LoadScene(TITLE_SCENE_NAME);
     }
 }
